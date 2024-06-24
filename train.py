@@ -3,9 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms, utils
+from torchvision import transforms, utils
 import matplotlib.pyplot as plt
 import os
+from medmnist import ChestMNIST
 
 # Basic VAE model definition
 class VAE(nn.Module):
@@ -70,7 +71,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 # Data loaders
 transform = transforms.Compose([transforms.ToTensor()])  # Ensure data is in [0, 1] range
-train_dataset = datasets.MNIST(root='./data', train=True, transform=transform, download=True)
+train_dataset = ChestMNIST(root='./data', split='train', transform=transform, download=True)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize model
@@ -96,7 +97,7 @@ for epoch in range(num_epochs):
     print(f'====> Epoch: {epoch} Average loss: {train_loss / len(train_loader.dataset):.4f}')
 
 # Save the model checkpoint
-torch.save(vae.state_dict(), os.path.join(output_dir, 'vae_mnist.pth'))
+torch.save(vae.state_dict(), os.path.join(output_dir, 'vae_chestmnist.pth'))
 
 # Generate new images and save them
 vae.eval()
@@ -111,3 +112,5 @@ with torch.no_grad():
 grid_img = utils.make_grid(generated_images.view(64, 1, 28, 28), nrow=8)
 plt.imshow(grid_img.permute(1, 2, 0), cmap='gray')
 plt.show()
+
+
