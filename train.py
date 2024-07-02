@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, utils
 import matplotlib.pyplot as plt
 import os
-from medmnist import ChestMNIST
+from medmnist import ChestMNIST, TissueMNIST
 from model import VAE
 from vqvae import VQVAE
 
@@ -28,7 +28,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model_type = 'vqvae'  # Choose between 'vae' and 'vqvae'
 batch_size = 64
 learning_rate = 0.001
-num_epochs = 5
+beta = 4
+num_epochs = 500
 latent_dim = 20
 num_embeddings = 512
 embedding_dim = 64
@@ -40,7 +41,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 # Data loaders
 transform = transforms.Compose([transforms.ToTensor()])
-train_dataset = ChestMNIST(root='./data', split='train', transform=transform, download=True)
+train_dataset = TissueMNIST(root='./data', split='train', transform=transform, download=True)
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize model
@@ -63,7 +64,7 @@ for epoch in range(num_epochs):
         if model_type == 'vae':
             recon_batch, mu, logvar = model(data)
             loss = F.binary_cross_entropy(recon_batch, data.view(-1, 28*28), reduction='sum') + \
-                   -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+                   -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) * beta
         elif model_type == 'vqvae':
             recon_batch, vq_loss, perplexity = model(data)
             recon_loss = F.mse_loss(recon_batch, data)
